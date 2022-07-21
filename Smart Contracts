@@ -1,0 +1,217 @@
+
+\\NFT Minting Smart Contract
+pragma solidity ^0.8.4;
+
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/74738721dc9cfa820687f6b700d2583b16a21c0d/contracts/token/ERC1155/ERC1155.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/74738721dc9cfa820687f6b700d2583b16a21c0d/contracts/utils/Strings.sol";
+
+contract Parts is ERC1155 {
+    uint256 public constant Valve = 0;
+    uint256 public constant Fan = 1;
+    uint256 public constant Cylinder = 2;
+
+    constructor() public ERC1155("https://bafybeih6d7zaakuzudz2m4soxmk2hrykfv7l4k4nseiycdcdneae2vzwqm.ipfs.nftstorage.link/{Id}.json"){
+        _mint(msg.sender, Valve, 50, "");
+        _mint(msg.sender,  Fan, 75,"");
+        _mint(msg.sender,  Cylinder , 100,"");
+    }
+    
+    function uri(uint256 _tokenId) override public view returns (string memory){
+        return string(
+            abi.encodePacked(
+            "https://bafybeibwdfht3xdygiwutni4gvdclvlatepcopxieodvrubvihwdh3yrpa.ipfs.nftstorage.link/",Strings.toString(_tokenId),".json")
+            );
+    }
+}
+
+
+
+
+
+
+
+
+\\NFT Purchase Smart Contract 
+ pragma solidity ^0.8.4;
+ 
+ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/74738721dc9cfa820687f6b700d2583b16a21c0d/contracts/token/ERC1155/ERC1155.sol";
+
+contract NftTrader{
+    
+    mapping(address =>  uint256) public mintedWallets;
+    mapping(address => mapping(uint256 => Listing)) public listings;
+    mapping(address => uint256) public balances;
+
+    
+    struct Listing {
+        uint256 price;
+        address seller;
+    }
+
+    event NFTsAreListed(uint256 tokenId); 
+    event NFTIsPurchased(uint256 tokenId, address contractAddr);
+    function addListing(uint256 price, address contractAddr, uint256 tokenId) public{
+        ERC1155 token = ERC1155(contractAddr);
+        require(token.balanceOf(msg.sender,tokenId) >0, "caller must own given token");
+        require(token.isApprovedForAll(msg.sender, address(this)), "contract must be approved");
+
+        listings[contractAddr][tokenId] = Listing(price, msg.sender);  
+     emit NFTsAreListed(tokenId);
+    }
+
+    function purchase(address contractAddr, uint256 tokenId, uint256 amount) public payable{
+        Listing memory item = listings[contractAddr][tokenId];
+        require(mintedWallets[msg.sender] < 1, 'exceed allowed supply');
+        require(msg.value >= item.price * amount, "insufficient funds sent");
+        balances[item.seller] += msg.value;
+
+        ERC1155 token = ERC1155(contractAddr);
+        token.safeTransferFrom(item.seller,msg.sender,tokenId, amount, "");
+        emit NFTIsPurchased(tokenId, contractAddr);
+    }
+
+    function withdraw(uint256 amount, address payable destAddr)public {
+        require(amount <= balances[msg.sender], "insufficient funds");
+
+        destAddr.transfer(amount);
+        balances[msg.sender] -= amount;
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+\\Quality 4.0 Management in Digital Manufacturing Smart Contract
+
+pragma solidity ^0.8.2;
+contract Orderflow { uint public _p_id =0; uint public _u_id =0; bool public delivered=true;
+
+struct product {
+uint workshop_ID;
+uint Customer_ID;
+string Customer_requirements;
+uint NFTDesigner_ID;
+uint NFT_ID;
+string NFT_URI;
+bool Delivered;
+string Product_Company_AndProcess_IPFS_Hash; 
+string Customer_Feedback;
+uint AI_ML_ID;
+string AI_ML_Reports_IPFS;
+bool AuthorityApproveCertification;
+}
+
+mapping(uint => product) public products;
+struct participant { string _userName; string _userEthID;
+}
+
+mapping(uint => participant) public participants;
+//set of events
+
+event Q4SmartContractIsCreatedWithNewCustomerRequest(uint workshop_ID, uint product_id);
+event CustomersRequirements(uint own_id,uint product_id,string requirements);
+event Confirm_NFT_Purchase_and_initiate_Processes(uint own_id,uint NFTDesigner_ID, string NFT_URI);
+event ProductDeliveredAskingForCustomersFeedback(uint own_id,uint product_id,uint Customer_ID, bool Delivered);
+event CheckDeliveryStatus(uint own_id,uint product_id,uint Customer_ID,bool Delivered);
+event FeedbackProvidedSubmitAI_MLReports(uint product_id,uint own_id,string Customer_Feedback);
+event AI_MLReportsProvided(uint product_id, uint own_id,string AI_ML_Reports_IPFS);
+event WorkshopIsAskingForCertificationApproval( uint product_ID,string AI_ML_Reports_IPFS,string NFT_URI,string IPFS_Hash);
+event AuthorityGrantedCertification(uint workshop_ID);
+event AuthorityDeniedCertification(uint workshop_ID); 
+
+    function createParticipant(string memory name  ,string memory EthID) public returns (uint){
+        uint user_id = _u_id++;
+        participants[user_id]._userEthID = EthID ;
+        participants[user_id]._userName = name;
+        return user_id;
+    }
+
+//Workshop create a smart contract and start a new Request
+function Workshop_creates_smart_contract(uint own_id ,uint  workshop_ID) public {if(keccak256(abi.encodePacked(participants[own_id]._userName)) == keccak256("Digital_Workshop")){
+    uint product_id=_p_id++;
+    emit Q4SmartContractIsCreatedWithNewCustomerRequest(workshop_ID, product_id);}
+}
+// customer Provides Requirements
+function Customer_provides_requirements(uint own_id  ,uint product_id, string memory requirements) public {if(keccak256(abi.encodePacked(participants[own_id]._userName)) == keccak256("Customer")){
+    products[product_id].Customer_ID=own_id;
+    products[product_id].Customer_requirements= requirements;
+    emit CustomersRequirements(own_id, product_id, requirements);}
+}
+
+//Workshop Confirm Purchase of NFT and Initiate Processes
+function Workshop_Confirms_NFT_Purchase_and_initiate_Processes(uint own_id,uint product_id, uint NFT_ID,uint NFTDesigner_ID,string memory NFT_URI) public { if(keccak256(abi.encodePacked(participants[own_id]._userName)) ==
+keccak256("Digital_Workshop")){ 
+products[product_id].NFTDesigner_ID = NFTDesigner_ID;
+products[product_id].NFT_URI = NFT_URI;
+products[product_id].NFT_ID = NFT_ID;
+emit Confirm_NFT_Purchase_and_initiate_Processes(own_id,NFTDesigner_ID, NFT_URI);
+} }
+
+//Workshop Ask for Customer Feedback 
+function WorkshopAskForCustomerFeedback(uint own_id, uint product_id,uint Customer_ID, bool Delivered) public {
+    if (keccak256(abi.encodePacked(participants[own_id]._userName)) ==
+keccak256("Digital_Workshop")) { products[product_id].Delivered = Delivered; if (Delivered){
+    emit ProductDeliveredAskingForCustomersFeedback(own_id,product_id,Customer_ID,Delivered);}
+    else {emit CheckDeliveryStatus(own_id,product_id,Customer_ID,Delivered); }
+} 
+} 
+
+function CustomerProvidesFeedback(uint own_id, uint product_id, string memory Customer_Feedback) public{ if(keccak256(abi.encodePacked(participants[own_id]._userName)) ==
+keccak256("Customer")) { products[product_id].Customer_Feedback = Customer_Feedback; 
+emit FeedbackProvidedSubmitAI_MLReports(product_id,own_id,Customer_Feedback);
+} }
+
+//AI&ML provides reports(Actions, Optimized Plans and Procedures) IPFS Hash
+function AI_MLProvidingReports(uint own_id, uint product_id, string memory AI_ML_Reports_IPFS) public {
+    if(keccak256(abi.encodePacked(participants[own_id]._userName)) == keccak256("AI&ML")){
+        products[product_id].AI_ML_ID = own_id; 
+        products[product_id].AI_ML_Reports_IPFS = AI_ML_Reports_IPFS; 
+            emit AI_MLReportsProvided(product_id, own_id, AI_ML_Reports_IPFS);
+} }
+
+//Digital workshop Ask For Authority Certification Approval
+function Workshop_asking_for_certification_approval(uint own_id, uint product_id, string memory AI_ML_Reports_IPFS, string memory NFT_URI, string memory IPFS_Hash) public {
+if(keccak256(abi.encodePacked(participants[own_id]._userName)) == keccak256("Digital_Workshop")) {
+products[product_id].Product_Company_AndProcess_IPFS_Hash = IPFS_Hash;
+emit WorkshopIsAskingForCertificationApproval( product_id, AI_ML_Reports_IPFS,NFT_URI,IPFS_Hash);
+} }
+
+//certification authority Approve Certfication
+function AuthorityApproveOrReject(uint own_id, uint product_ID, uint workshop_ID, bool approve) public{
+    if(keccak256(abi.encodePacked(participants[own_id]._userName)) == keccak256("CertificationAuthority")){
+    products[product_ID].AuthorityApproveCertification = approve;
+    if(approve){
+        emit AuthorityGrantedCertification(workshop_ID);
+        } else {
+        emit AuthorityDeniedCertification(workshop_ID); 
+    }}
+}
+
+function getParticipant(uint p_id) public returns (string memory,string memory) { return (participants[p_id]._userName,participants[p_id]._userName);
+}
+
+function userLogin(uint uid ,string memory uname ,string memory pass ,string memory utype) public returns (bool){
+if(keccak256(abi.encodePacked(participants[uid]._userName)) == keccak256(abi.encodePacked(utype))) {
+if(keccak256(abi.encodePacked(participants[uid]._userName)) == keccak256(abi.encodePacked(uname))) {
+//if(keccak256(abi.encodePacked(participants[uid]._passWord))==keccak256(abi.encodePack ed(pass))) {
+return (true); }
+}
+
+}
+}
+
+
+
+
+
+
+
