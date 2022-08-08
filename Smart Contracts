@@ -1,95 +1,4 @@
 
-\\NFT Minting Smart Contract
-pragma solidity ^0.8.4;
-
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/74738721dc9cfa820687f6b700d2583b16a21c0d/contracts/token/ERC1155/ERC1155.sol";
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/74738721dc9cfa820687f6b700d2583b16a21c0d/contracts/utils/Strings.sol";
-
-contract Parts is ERC1155 {
-    uint256 public constant Valve = 0;
-    uint256 public constant Fan = 1;
-    uint256 public constant Cylinder = 2;
-
-    constructor() public ERC1155("https://bafybeih6d7zaakuzudz2m4soxmk2hrykfv7l4k4nseiycdcdneae2vzwqm.ipfs.nftstorage.link/{Id}.json"){
-        _mint(msg.sender, Valve, 50, "");
-        _mint(msg.sender,  Fan, 75,"");
-        _mint(msg.sender,  Cylinder , 100,"");
-    }
-    
-    function uri(uint256 _tokenId) override public view returns (string memory){
-        return string(
-            abi.encodePacked(
-            "https://bafybeibwdfht3xdygiwutni4gvdclvlatepcopxieodvrubvihwdh3yrpa.ipfs.nftstorage.link/",Strings.toString(_tokenId),".json")
-            );
-    }
-}
-
-
-
-
-
-
-
-
-\\NFT Purchase Smart Contract 
- pragma solidity ^0.8.4;
- 
- import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/74738721dc9cfa820687f6b700d2583b16a21c0d/contracts/token/ERC1155/ERC1155.sol";
-
-contract NftTrader{
-    
-    mapping(address =>  uint256) public mintedWallets;
-    mapping(address => mapping(uint256 => Listing)) public listings;
-    mapping(address => uint256) public balances;
-
-    
-    struct Listing {
-        uint256 price;
-        address seller;
-    }
-
-    event NFTsAreListed(uint256 tokenId); 
-    event NFTIsPurchased(uint256 tokenId, address contractAddr);
-    function addListing(uint256 price, address contractAddr, uint256 tokenId) public{
-        ERC1155 token = ERC1155(contractAddr);
-        require(token.balanceOf(msg.sender,tokenId) >0, "caller must own given token");
-        require(token.isApprovedForAll(msg.sender, address(this)), "contract must be approved");
-
-        listings[contractAddr][tokenId] = Listing(price, msg.sender);  
-     emit NFTsAreListed(tokenId);
-    }
-
-    function purchase(address contractAddr, uint256 tokenId, uint256 amount) public payable{
-        Listing memory item = listings[contractAddr][tokenId];
-        require(mintedWallets[msg.sender] < 1, 'exceed allowed supply');
-        require(msg.value >= item.price * amount, "insufficient funds sent");
-        balances[item.seller] += msg.value;
-
-        ERC1155 token = ERC1155(contractAddr);
-        token.safeTransferFrom(item.seller,msg.sender,tokenId, amount, "");
-        emit NFTIsPurchased(tokenId, contractAddr);
-    }
-
-    function withdraw(uint256 amount, address payable destAddr)public {
-        require(amount <= balances[msg.sender], "insufficient funds");
-
-        destAddr.transfer(amount);
-        balances[msg.sender] -= amount;
-    }
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
 \\Quality 4.0 Management in Digital Manufacturing Smart Contract
 
 pragma solidity ^0.8.2;
@@ -208,6 +117,94 @@ return (true); }
 
 }
 }
+
+
+
+
+
+\\NFT Minting Smart Contract
+pragma solidity ^0.8.4;
+
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/74738721dc9cfa820687f6b700d2583b16a21c0d/contracts/token/ERC1155/ERC1155.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/74738721dc9cfa820687f6b700d2583b16a21c0d/contracts/utils/Strings.sol";
+
+contract Parts is ERC1155 {
+    uint256 public constant Valve = 0;
+    uint256 public constant Fan = 1;
+    uint256 public constant Cylinder = 2;
+
+    constructor() public ERC1155("https://bafybeih6d7zaakuzudz2m4soxmk2hrykfv7l4k4nseiycdcdneae2vzwqm.ipfs.nftstorage.link/{Id}.json"){
+        _mint(msg.sender, Valve, 50, "");
+        _mint(msg.sender,  Fan, 75,"");
+        _mint(msg.sender,  Cylinder , 100,"");
+    }
+    
+    function uri(uint256 _tokenId) override public view returns (string memory){
+        return string(
+            abi.encodePacked(
+            "https://bafybeibwdfht3xdygiwutni4gvdclvlatepcopxieodvrubvihwdh3yrpa.ipfs.nftstorage.link/",Strings.toString(_tokenId),".json")
+            );
+    }
+}
+
+
+
+
+
+
+
+
+\\NFT Purchase Smart Contract 
+ pragma solidity ^0.8.4;
+ 
+ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/74738721dc9cfa820687f6b700d2583b16a21c0d/contracts/token/ERC1155/ERC1155.sol";
+
+contract NftTrader{
+    
+    mapping(address =>  uint256) public mintedWallets;
+    mapping(address => mapping(uint256 => Listing)) public listings;
+    mapping(address => uint256) public balances;
+
+    
+    struct Listing {
+        uint256 price;
+        address seller;
+    }
+
+    event NFTsAreListed(uint256 tokenId); 
+    event NFTIsPurchased(uint256 tokenId, address contractAddr);
+    function addListing(uint256 price, address contractAddr, uint256 tokenId) public{
+        ERC1155 token = ERC1155(contractAddr);
+        require(token.balanceOf(msg.sender,tokenId) >0, "caller must own given token");
+        require(token.isApprovedForAll(msg.sender, address(this)), "contract must be approved");
+
+        listings[contractAddr][tokenId] = Listing(price, msg.sender);  
+     emit NFTsAreListed(tokenId);
+    }
+
+    function purchase(address contractAddr, uint256 tokenId, uint256 amount) public payable{
+        Listing memory item = listings[contractAddr][tokenId];
+        require(mintedWallets[msg.sender] < 1, 'exceed allowed supply');
+        require(msg.value >= item.price * amount, "insufficient funds sent");
+        balances[item.seller] += msg.value;
+
+        ERC1155 token = ERC1155(contractAddr);
+        token.safeTransferFrom(item.seller,msg.sender,tokenId, amount, "");
+        emit NFTIsPurchased(tokenId, contractAddr);
+    }
+
+    function withdraw(uint256 amount, address payable destAddr)public {
+        require(amount <= balances[msg.sender], "insufficient funds");
+
+        destAddr.transfer(amount);
+        balances[msg.sender] -= amount;
+    }
+
+}
+
+
+
+
 
 
 
